@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Финальный проект: от идеи до портфолио | Zerocoder</title>
+<style>
+  :root {
+    --purple: #9b7fe8;
+    --green: #4dee8d;
+    --light: #f0ecfc;
+    --dark: #2d2d2d;
+    --purple-dim: rgba(155,127,232,0.15);
+    --green-dim: rgba(77,238,141,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--dark);
+    color: var(--light);
+  }
+
+  /* ── Scroll container ── */
+  .slides-track {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .slides-track::-webkit-scrollbar { display: none; }
+  .slides-track { scrollbar-width: none; }
+
+  /* ── Single Slide ── */
+  .slide {
+    flex: 0 0 100vw;
+    width: 100vw;
+    height: 100vh;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Background image layer ── */
+  .slide-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.25) saturate(1.4);
+    transform: scale(1.05);
+    transition: transform 8s ease;
+  }
+  .slide.active .slide-bg { transform: scale(1.0); }
+
+  /* ── Gradient overlay ── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(155,127,232,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(77,238,141,0.10) 0%, transparent 60%),
+                linear-gradient(180deg, rgba(45,45,45,0.4) 0%, rgba(45,45,45,0.85) 100%);
+    z-index: 1;
+  }
+
+  /* ── Watermark ── */
+  .slide::after {
+    content: 'zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder zerocoder';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 20px;
+    font-size: clamp(9px, 1vw, 13px);
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(155,127,232,0.12);
+    pointer-events: none;
+    z-index: 2;
+    word-spacing: 2em;
+    line-height: 1.8;
+    overflow: hidden;
+    writing-mode: horizontal-tb;
+  }
+
+  /* ── Watermark badge ── */
+  .wm-badge {
+    position: absolute;
+    bottom: 22px;
+    right: 28px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(155,127,232,0.45);
+    z-index: 20;
+    border: 1px solid rgba(155,127,232,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── Slide content ── */
+  .slide-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1400px;
+    padding: 0 5vw;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4vw;
+    align-items: center;
+  }
+
+  .slide-content.single-col {
+    grid-template-columns: 1fr;
+    max-width: 900px;
+    text-align: center;
+  }
+
+  .slide-content.wide {
+    grid-template-columns: 55% 40%;
+  }
+
+  /* ── Text animations ── */
+  .anim-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .anim-up.delay-1 { transition-delay: 0.1s; }
+  .anim-up.delay-2 { transition-delay: 0.2s; }
+  .anim-up.delay-3 { transition-delay: 0.35s; }
+  .anim-up.delay-4 { transition-delay: 0.5s; }
+  .anim-up.delay-5 { transition-delay: 0.65s; }
+  .anim-up.delay-6 { transition-delay: 0.8s; }
+
+  .anim-right {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .anim-left {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .anim-scale {
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .slide.active .anim-up,
+  .slide.active .anim-right,
+  .slide.active .anim-left,
+  .slide.active .anim-scale {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── Slide image ── */
+  .slide-img {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(155,127,232,0.3), 0 0 20px rgba(77,238,141,0.15);
+    border: 1px solid rgba(155,127,232,0.25);
+  }
+  .slide-img img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 20px;
+    max-height: 65vh;
+    object-fit: cover;
+  }
+
+  /* ── Typography ── */
+  .slide-num {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .slide-tag {
+    display: inline-block;
+    background: rgba(77,238,141,0.12);
+    border: 1px solid rgba(77,238,141,0.3);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  h1.hero-title {
+    font-size: clamp(2.2rem, 4.5vw, 5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--light);
+    margin-bottom: 20px;
+  }
+  h1.hero-title span { color: var(--purple); }
+
+  h2.slide-title {
+    font-size: clamp(1.6rem, 2.8vw, 3rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--light);
+    margin-bottom: 14px;
+  }
+  h2.slide-title span { color: var(--green); }
+
+  .slide-desc {
+    font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+    line-height: 1.75;
+    color: rgba(240,236,252,0.75);
+    margin-bottom: 20px;
+  }
+
+  /* ── Time badge ── */
+  .time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(155,127,232,0.12);
+    border: 1px solid rgba(155,127,232,0.3);
+    color: var(--purple);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  .time-badge::before { content: '⏱'; }
+
+  /* ── Bullet list ── */
+  .bullet-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .bullet-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: clamp(0.78rem, 1.1vw, 0.95rem);
+    color: rgba(240,236,252,0.82);
+    line-height: 1.5;
+  }
+  .bullet-list li::before {
+    content: '';
+    flex: 0 0 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-top: 7px;
+    box-shadow: 0 0 8px var(--green);
+  }
+
+  /* ── Step cards ── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .step-card {
+    background: rgba(155,127,232,0.07);
+    border: 1px solid rgba(155,127,232,0.2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .step-card:hover {
+    border-color: rgba(155,127,232,0.5);
+    background: rgba(155,127,232,0.12);
+  }
+  .step-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--purple);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .step-title {
+    font-size: clamp(0.78rem, 1vw, 0.92rem);
+    font-weight: 700;
+    color: var(--light);
+    margin-bottom: 4px;
+  }
+  .step-desc {
+    font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+    color: rgba(240,236,252,0.6);
+    line-height: 1.45;
+  }
+
+  /* ── Key insight box ── */
+  .insight-box {
+    background: linear-gradient(135deg, rgba(155,127,232,0.1), rgba(77,238,141,0.08));
+    border: 1px solid rgba(155,127,232,0.3);
+    border-left: 3px solid var(--purple);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-top: 14px;
+  }
+  .insight-box p {
+    font-size: clamp(0.78rem, 1vw, 0.92rem);
+    color: rgba(240,236,252,0.85);
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .insight-box strong { color: var(--green); font-style: normal; }
+
+  /* ── Code block ── */
+  .code-block {
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(155,127,232,0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: clamp(0.72rem, 0.95vw, 0.88rem);
+    color: var(--green);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-top: 12px;
+  }
+
+  /* ── Criteria grid ── */
+  .criteria-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .criteria-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(77,238,141,0.06);
+    border: 1px solid rgba(77,238,141,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: clamp(0.72rem, 0.95vw, 0.88rem);
+    color: rgba(240,236,252,0.85);
+    transition: border-color 0.3s;
+  }
+  .criteria-item:hover { border-color: var(--green); }
+  .criteria-item::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    text-shadow: 0 0 8px var(--green);
+  }
+
+  /* ── Speech structure ── */
+  .speech-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .speech-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 14px;
+    background: rgba(155,127,232,0.06);
+    border-radius: 10px;
+    border-left: 2px solid var(--purple);
+  }
+  .speech-n {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--purple);
+    min-width: 28px;
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .speech-text {
+    font-size: clamp(0.75rem, 1vw, 0.9rem);
+    color: rgba(240,236,252,0.8);
+    line-height: 1.5;
+  }
+  .speech-text strong { color: var(--light); }
+
+  /* ── Hero big stat pills ── */
+  .hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .hero-pill {
+    background: rgba(155,127,232,0.12);
+    border: 1px solid rgba(155,127,232,0.3);
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+    color: var(--light);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-pill span { color: var(--green); }
+
+  /* ── Navigation ── */
+  .nav-dots {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(240,236,252,0.25);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-dot.active {
+    background: var(--purple);
+    box-shadow: 0 0 10px var(--purple);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  .nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(45,45,45,0.7);
+    border: 1px solid rgba(155,127,232,0.35);
+    color: var(--light);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s;
+    backdrop-filter: blur(8px);
+  }
+  .nav-btn:hover {
+    background: rgba(155,127,232,0.25);
+    border-color: var(--purple);
+    box-shadow: 0 0 20px rgba(155,127,232,0.3);
+  }
+  #nav-prev { left: 20px; }
+  #nav-next { right: 20px; }
+
+  /* ── Slide counter ── */
+  .slide-counter {
+    position: fixed;
+    top: 24px;
+    right: 28px;
+    z-index: 100;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(240,236,252,0.4);
+    letter-spacing: 0.1em;
+  }
+  .slide-counter span { color: var(--purple); }
+
+  /* ── Particles canvas ── */
+  #particle-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── Glow lines ── */
+  .glow-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--purple), transparent);
+    opacity: 0;
+    animation: scanLine 6s ease-in-out infinite;
+  }
+  .glow-line:nth-child(1) { width: 60%; top: 30%; left: 20%; animation-delay: 0s; }
+  .glow-line:nth-child(2) { width: 40%; top: 60%; left: 30%; animation-delay: 2s; color: var(--green); background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .glow-line:nth-child(3) { width: 50%; top: 80%; left: 15%; animation-delay: 4s; }
+
+  @keyframes scanLine {
+    0%, 100% { opacity: 0; transform: scaleX(0.3); }
+    50% { opacity: 0.4; transform: scaleX(1); }
+  }
+
+  /* ── Floating orbs ── */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: floatOrb 8s ease-in-out infinite;
+    z-index: 0;
+  }
+  .orb-purple { background: rgba(155,127,232,0.15); width: 300px; height: 300px; }
+  .orb-green { background: rgba(77,238,141,0.10); width: 250px; height: 250px; }
+  .orb-1 { top: -10%; left: -5%; animation-delay: 0s; }
+  .orb-2 { bottom: -10%; right: -5%; animation-delay: 3s; }
+  .orb-3 { top: 30%; right: 10%; animation-delay: 1.5s; }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(20px, -20px); }
+    66% { transform: translate(-15px, 15px); }
+  }
+
+  /* ── Pulse ring ── */
+  @keyframes pulseRing {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  /* ── Logo ── */
+  .logo {
+    position: fixed;
+    top: 22px;
+    left: 28px;
+    z-index: 100;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--purple);
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--green); }
+    50% { opacity: 0.5; box-shadow: 0 0 20px var(--green); }
+  }
+
+  /* ── Two-week countdown hero ── */
+  .countdown-bar {
+    display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap;
+  }
+  .c-box {
+    text-align: center;
+    background: rgba(155,127,232,0.1);
+    border: 1px solid rgba(155,127,232,0.25);
+    border-radius: 14px;
+    padding: 12px 20px;
+    min-width: 80px;
+  }
+  .c-num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--green);
+    text-shadow: 0 0 20px var(--green);
+    display: block;
+  }
+  .c-label {
+    font-size: 11px;
+    color: rgba(240,236,252,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 4px;
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 900px) {
+    .slide-content { grid-template-columns: 1fr !important; gap: 24px; }
+    .slide-img { display: none; }
+    .steps-grid, .criteria-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<div class="logo">
+  <div class="logo-dot"></div>
+  zerocoder
+</div>
+
+<div class="slide-counter"><span id="cur-slide">1</span> / 10</div>
+
+<button class="nav-btn" id="nav-prev" onclick="navigate(-1)">&#8592;</button>
+<button class="nav-btn" id="nav-next" onclick="navigate(1)">&#8594;</button>
+
+<div class="nav-dots" id="nav-dots"></div>
+
+<div class="slides-track" id="track">
+
+  <!-- ═══════════════════════════ SLIDE 1 — HERO ═══════════════════════════ -->
+  <section class="slide" id="slide-0">
+    <div class="slide-bg" style="background-image:url('images/hero.png')"></div>
+    <div class="orb orb-purple orb-1"></div>
+    <div class="orb orb-green orb-2"></div>
+    <div class="glow-line"></div>
+    <div class="glow-line"></div>
+    <div class="glow-line"></div>
+    <div class="slide-content single-col">
+      <div>
+        <div class="slide-tag anim-up">Финальный урок курса</div>
+        <h1 class="hero-title anim-up delay-1">
+          Финальный проект:<br><span>от идеи</span> до портфолио
+        </h1>
+        <p class="slide-desc anim-up delay-2" style="max-width:600px;margin:0 auto 20px">
+          Собираем всё, что изучили на курсе, в один рабочий кейс — понятный, завершённый и готовый к демонстрации.
+        </p>
+        <div class="countdown-bar anim-up delay-3" style="justify-content:center;">
+          <div class="c-box"><span class="c-num">2</span><div class="c-label">недели</div></div>
+          <div class="c-box"><span class="c-num">1</span><div class="c-label">ваш кейс</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 2 ═══════════════════════════ -->
+  <section class="slide" id="slide-1">
+    <div class="slide-bg" style="background-image:url('images/why_project.png')"></div>
+    <div class="orb orb-purple orb-3"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">01 — Зачем</div>
+        <h2 class="slide-title anim-up delay-1">Зачем нужен <span>финальный проект</span></h2>
+        <ul class="bullet-list anim-up delay-2">
+          <li>Показывает, что вы доводите идею до результата — не только смотрите уроки</li>
+          <li>Собирает навыки курса: Claude Code, проектирование, разработка, публикация</li>
+          <li>Становится первым или очередным кейсом в портфолио</li>
+          <li>Помогает сформулировать профессиональную ценность</li>
+          <li>Может стать основой для фриланс-услуги или внутренней автоматизации</li>
+        </ul>
+        <div class="insight-box anim-up delay-3">
+          <p><strong>Ключевая мысль:</strong> Финальный проект — ваша демонстрация навыков через реальную задачу. Чем ближе проект к жизни, тем сильнее он выглядит в портфолио.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/why_project.png" alt="Portfolio project">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 3 ═══════════════════════════ -->
+  <section class="slide" id="slide-2">
+    <div class="slide-bg" style="background-image:url('images/choose_idea.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">02 — Идея</div>
+        <h2 class="slide-title anim-up delay-1">Как выбрать проект, если <span>идеи нет</span></h2>
+        <div class="steps-grid anim-up delay-2">
+          <div class="step-card">
+            <div class="step-num">Шаг 1</div>
+            <div class="step-title">Найти повторяющуюся задачу</div>
+            <div class="step-desc">Посты, отчёты, заявки, заметки, описания товаров</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">Шаг 2</div>
+            <div class="step-title">Найти боль или неудобство</div>
+            <div class="step-desc">Что занимает больше всего времени? Где ошибки?</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">Шаг 3</div>
+            <div class="step-title">Сформулировать идею сервиса</div>
+            <div class="step-desc">«Было: вручную. Проект: автоматически»</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">Шаг 4</div>
+            <div class="step-title">Ограничить до MVP</div>
+            <div class="step-desc">Не платформа, а конкретный рабочий инструмент</div>
+          </div>
+          <div class="step-card" style="grid-column:1/-1;">
+            <div class="step-num">Шаг 5</div>
+            <div class="step-title">Проверить по критериям</div>
+            <div class="step-desc">Понятный · Полезный · Завершённый · Демонстрируемый · Реальная задача · Выполнимый за 2 недели</div>
+          </div>
+        </div>
+        <div class="insight-box anim-up delay-4">
+          <p><strong>Ключевая мысль:</strong> Проект рождается не из «что бы придумать?», а из «какую реальную задачу я могу упростить с помощью Claude Code?»</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-3">
+        <img src="images/choose_idea.png" alt="Choose idea">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 4 ═══════════════════════════ -->
+  <section class="slide" id="slide-3">
+    <div class="slide-bg" style="background-image:url('images/describe_project.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">03 — Описание</div>
+        <h2 class="slide-title anim-up delay-1">Как описать проект <span>для Claude Code</span></h2>
+        <ul class="bullet-list anim-up delay-2">
+          <li><strong style="color:var(--green)">Название</strong> — короткое и понятное</li>
+          <li><strong style="color:var(--green)">Проблема</strong> — какую задачу решает проект</li>
+          <li><strong style="color:var(--green)">Пользователь</strong> — для кого создаётся</li>
+          <li><strong style="color:var(--green)">Основная функция</strong> — что сервис должен делать</li>
+          <li><strong style="color:var(--green)">Формат результата</strong> — что видит пользователь на выходе</li>
+          <li><strong style="color:var(--green)">Минимальный функционал</strong> — что должно быть в первой версии</li>
+          <li><strong style="color:var(--green)">Технологии</strong> — Python, Flask, HTML/CSS и т.д.</li>
+        </ul>
+        <div class="insight-box anim-up delay-3">
+          <p><strong>Ключевая мысль:</strong> Claude Code работает лучше, когда получает не «сделай проект», а описание задачи, пользователя, результата и ограничений.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/describe_project.png" alt="Describe project">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 5 ═══════════════════════════ -->
+  <section class="slide" id="slide-4">
+    <div class="slide-bg" style="background-image:url('images/develop_project.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">04 — Разработка</div>
+        <h2 class="slide-title anim-up delay-1">Разработка проекта <span>в Claude Code</span></h2>
+        <ul class="bullet-list anim-up delay-2">
+          <li>Создать рабочую папку: <code style="color:var(--green);font-size:0.85em">product-description-generator</code></li>
+          <li>Открыть папку в Claude Code</li>
+          <li>Попросить составить план — сначала структура, потом код</li>
+          <li>Создать минимальную рабочую версию (MVP)</li>
+          <li>Запустить локально и проверить основные сценарии</li>
+          <li>Попросить улучшить интерфейс и тексты</li>
+          <li>Попросить подготовить README и инструкцию по запуску</li>
+        </ul>
+        <div class="insight-box anim-up delay-3">
+          <p><strong>Ключевая мысль:</strong> Для портфолио важно не только то, что проект существует, но и то, что его можно <strong>показать</strong> — интерфейс, сценарий, результат, ссылка.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/develop_project.png" alt="Develop project">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 6 ═══════════════════════════ -->
+  <section class="slide" id="slide-5">
+    <div class="slide-bg" style="background-image:url('images/criteria.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">05 — Критерии</div>
+        <h2 class="slide-title anim-up delay-1">Критерии <span>финального проекта</span></h2>
+        <div class="criteria-grid anim-up delay-2">
+          <div class="criteria-item">Понятная идея и описание задачи</div>
+          <div class="criteria-item">Рабочий локальный запуск</div>
+          <div class="criteria-item">Пользовательский сценарий</div>
+          <div class="criteria-item">Минимальный интерфейс</div>
+          <div class="criteria-item">Демонстрируемый результат</div>
+          <div class="criteria-item">Структура файлов проекта</div>
+          <div class="criteria-item">README с инструкцией запуска</div>
+          <div class="criteria-item">Ссылка на GitHub-репозиторий</div>
+        </div>
+        <div class="insight-box anim-up delay-3">
+          <p><strong>Ключевая мысль:</strong> Сильный проект — это не самый сложный, а тот, который можно <strong>открыть, понять, запустить и показать</strong>.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/criteria.png" alt="Criteria">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 7 ═══════════════════════════ -->
+  <section class="slide" id="slide-6">
+    <div class="slide-bg" style="background-image:url('images/github.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">06 — GitHub</div>
+        <h2 class="slide-title anim-up delay-1">GitHub: <span>профиль, репозиторий</span> и публикация</h2>
+        <p class="slide-desc anim-up delay-2">GitHub — это витрина проекта не только для разработчиков. Здесь лежит код, описание, инструкция и доказательство выполненной работы.</p>
+        <ul class="bullet-list anim-up delay-2">
+          <li>Регистрация и оформление профиля</li>
+          <li>Создание репозитория под проект</li>
+          <li>Загрузка файлов: код, README, скриншоты</li>
+          <li>Публикация проекта на GitHub Pages или сервер</li>
+          <li>Ссылка в портфолио и резюме</li>
+        </ul>
+        <div class="insight-box anim-up delay-3">
+          <p><strong>Практика:</strong> Регистрация на GitHub → оформление профиля → публикация проекта → ссылка в портфолио.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/github.png" alt="GitHub">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 8 ═══════════════════════════ -->
+  <section class="slide" id="slide-7">
+    <div class="slide-bg" style="background-image:url('images/describe_project.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">07 — Skill</div>
+        <h2 class="slide-title anim-up delay-1">Skill <span>для своего проекта</span></h2>
+        <p class="slide-desc anim-up delay-2">Создаём инструкцию для Claude Code, которая помогает работать с проектом правильно. Скиллом можно делиться с коллегами и знакомыми.</p>
+        <div class="code-block anim-up delay-3">Создай skill для моего проекта.
+Он должен помогать Claude Code работать
+с этим репозиторием: понимать структуру,
+запускать сервис, вносить изменения,
+обновлять README, проверять ошибки
+и готовить проект к публикации.</div>
+        <div class="insight-box anim-up delay-4">
+          <p><strong>Ключевая мысль:</strong> Skill показывает, что студент умеет не только сделать проект, но и описать правила работы с ним для AI-ассистента.</p>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/describe_project.png" alt="Skill">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 9 ═══════════════════════════ -->
+  <section class="slide" id="slide-8">
+    <div class="slide-bg" style="background-image:url('images/graduation.png')"></div>
+    <div class="slide-content wide">
+      <div>
+        <div class="slide-num anim-up">08 — Выпускной</div>
+        <h2 class="slide-title anim-up delay-1">Как будет <span>проходить выпускной</span></h2>
+        <p class="slide-desc anim-up delay-2">Онлайн-выпускной в формате демонстрации проектов. 3–5 минут на каждого. Подготовьте презентацию с Claude + демонстрацию проекта вживую.</p>
+        <div class="speech-list anim-up delay-3">
+          <div class="speech-item">
+            <div class="speech-n">1</div>
+            <div class="speech-text"><strong>Что я сделал(а)</strong> — название и краткое описание</div>
+          </div>
+          <div class="speech-item">
+            <div class="speech-n">2</div>
+            <div class="speech-text"><strong>Какую проблему решает</strong> — почему это важно</div>
+          </div>
+          <div class="speech-item">
+            <div class="speech-n">3</div>
+            <div class="speech-text"><strong>Как работает</strong> — живая демонстрация сценария</div>
+          </div>
+          <div class="speech-item">
+            <div class="speech-n">4</div>
+            <div class="speech-text"><strong>Результат</strong> — ссылка, скриншоты, GitHub</div>
+          </div>
+          <div class="speech-item">
+            <div class="speech-n">5</div>
+            <div class="speech-text"><strong>Что доработать дальше</strong> — 1–2 идеи развития</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-img anim-left delay-2">
+        <img src="images/graduation.png" alt="Graduation">
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+  <!-- ═══════════════════════════ SLIDE 10 — OUTRO ═══════════════════════════ -->
+  <section class="slide" id="slide-9">
+    <div class="slide-bg" style="background-image:url('images/hero.png')"></div>
+    <div class="orb orb-purple orb-1"></div>
+    <div class="orb orb-green orb-2"></div>
+    <div class="orb orb-purple orb-3"></div>
+    <div class="glow-line"></div>
+    <div class="glow-line"></div>
+    <div class="slide-content single-col">
+      <div>
+        <div class="slide-tag anim-up">Итог урока</div>
+        <h1 class="hero-title anim-up delay-1" style="font-size:clamp(1.8rem,3.5vw,4rem)">
+          Через 2 недели у вас будет <span>не просто проект</span> — а кейс для портфолио
+        </h1>
+        <div class="hero-pills anim-up delay-2" style="justify-content:center;">
+          <div class="hero-pill">✓ Понятный</div>
+          <div class="hero-pill">✓ Оформленный</div>
+          <div class="hero-pill">✓ Рабочий</div>
+          <div class="hero-pill">✓ <span>Демонстрируемый</span></div>
+        </div>
+        <p class="slide-desc anim-up delay-3" style="max-width:600px;margin:20px auto 0;font-size:1rem;">
+          Выбрать идею → Описать для Claude Code → Собрать MVP → Оформить на GitHub → Показать на выпускном
+        </p>
+        <div style="margin-top:28px;" class="anim-up delay-4">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--purple);letter-spacing:0.05em;">ZEROCODER</div>
+          <div style="font-size:0.85rem;color:rgba(240,236,252,0.4);margin-top:4px;letter-spacing:0.2em;text-transform:uppercase;">Финальный урок курса</div>
+        </div>
+      </div>
+    </div>
+    <div class="wm-badge">zerocoder</div>
+  </section>
+
+</div><!-- /.slides-track -->
+
+<script>
+// ── Particles ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const COLORS = ['#9b7fe8', '#4dee8d', '#f0ecfc'];
+
+class Particle {
+  constructor() { this.reset(true); }
+  reset(init) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H : H + 10;
+    this.r = Math.random() * 1.8 + 0.4;
+    this.vx = (Math.random() - 0.5) * 0.4;
+    this.vy = -(Math.random() * 0.6 + 0.2);
+    this.alpha = Math.random() * 0.5 + 0.15;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.life = 0;
+    this.maxLife = Math.random() * 300 + 200;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life++;
+    const ratio = this.life / this.maxLife;
+    this.alpha = ratio < 0.2 ? ratio * 2.5 * 0.5 : ratio > 0.8 ? (1 - ratio) * 5 * 0.5 : 0.5;
+    if (this.life > this.maxLife || this.y < -10) this.reset(false);
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+function animateParticles() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+const track = document.getElementById('track');
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+
+// Create dots
+const dotsContainer = document.getElementById('nav-dots');
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  d.addEventListener('click', () => goTo(i));
+  dotsContainer.appendChild(d);
+});
+
+function goTo(idx) {
+  idx = Math.max(0, Math.min(total - 1, idx));
+  current = idx;
+  track.scrollTo({ left: idx * window.innerWidth, behavior: 'smooth' });
+  updateNav();
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+function updateNav() {
+  document.getElementById('cur-slide').textContent = current + 1;
+  document.querySelectorAll('.nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+  });
+  document.getElementById('nav-prev').style.opacity = current === 0 ? '0.3' : '1';
+  document.getElementById('nav-next').style.opacity = current === total - 1 ? '0.3' : '1';
+  // Activate slide animations
+  slides.forEach((s, i) => s.classList.toggle('active', i === current));
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+});
+
+// Touch swipe
+let touchStartX = 0;
+track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+track.addEventListener('touchend', e => {
+  const dx = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 50) navigate(dx > 0 ? 1 : -1);
+});
+
+// Scroll sync
+let scrolling = false;
+track.addEventListener('scroll', () => {
+  if (scrolling) return;
+  scrolling = true;
+  setTimeout(() => {
+    const idx = Math.round(track.scrollLeft / window.innerWidth);
+    if (idx !== current) { current = idx; updateNav(); }
+    scrolling = false;
+  }, 80);
+});
+
+// Resize: re-snap
+window.addEventListener('resize', () => {
+  track.scrollTo({ left: current * window.innerWidth, behavior: 'instant' });
+});
+
+// Initial state
+updateNav();
+
+// ── Animated grid lines in background ──────────────────────────────────────
+(function() {
+  const lineCanvas = document.createElement('canvas');
+  lineCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.06';
+  document.body.insertBefore(lineCanvas, document.body.firstChild);
+  const lc = lineCanvas.getContext('2d');
+
+  function drawGrid() {
+    lineCanvas.width = window.innerWidth;
+    lineCanvas.height = window.innerHeight;
+    lc.strokeStyle = '#9b7fe8';
+    lc.lineWidth = 0.5;
+    const gap = 60;
+    for (let x = 0; x <= lineCanvas.width; x += gap) {
+      lc.beginPath(); lc.moveTo(x, 0); lc.lineTo(x, lineCanvas.height); lc.stroke();
+    }
+    for (let y = 0; y <= lineCanvas.height; y += gap) {
+      lc.beginPath(); lc.moveTo(0, y); lc.lineTo(lineCanvas.width, y); lc.stroke();
+    }
+  }
+  drawGrid();
+  window.addEventListener('resize', drawGrid);
+})();
+</script>
+</body>
+</html>
